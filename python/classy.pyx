@@ -1531,7 +1531,7 @@ cdef class Class:
                          self.ba.Omega0_ncdm_tot + self.ba.Omega0_dcdm)
             elif name == 'omega_m':
                 value = (self.ba.Omega0_b + self.ba.Omega0_cdm+
-                         self.ba.Omega0_ncdm_tot + self.ba.Omega0_dcdm)/self.ba.h**2
+                         self.ba.Omega0_ncdm_tot + self.ba.Omega0_dcdm)*self.ba.h**2
             elif name == 'tau_reio':
                 value = self.th.tau_reio
             elif name == 'z_reio':
