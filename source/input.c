@@ -759,6 +759,73 @@ int input_read_parameters(
 
   Omega_tot += pba->Omega0_cdm;
 
+  /* Omega_0_dmeff (dmeff) */
+  class_call(parser_read_double(pfc,"Omega_dmeff",&param1,&flag1,errmsg),
+             errmsg,
+             errmsg);
+  class_call(parser_read_double(pfc,"omega_dmeff",&param2,&flag2,errmsg),
+             errmsg,
+             errmsg);
+  class_test(((flag1 == _TRUE_) && (flag2 == _TRUE_)),
+             errmsg,
+             "In input file, you can only enter one of Omega_dmeff or omega_dmeff, choose one");
+  if (flag1 == _TRUE_)
+    pba->Omega0_dmeff = param1;
+  if (flag2 == _TRUE_)
+    pba->Omega0_dmeff = param2/pba->h/pba->h;
+
+  if(pba->Omega0_dmeff > 0){
+
+    Omega_tot += pba->Omega0_dmeff;
+
+    /* m_dmeff (dmeff) in kg */
+    class_read_double("m_dmeff",pba->m_dmeff);
+    pba->m_dmeff *= 1.0e9 * _eV_ / (_c_ * _c_); // convert GeV to kg
+
+    /* npow_dmeff (dmeff) */
+    class_read_double("npow_dmeff",pba->npow_dmeff);
+    class_test(pba->npow_dmeff < 0,errmsg,"In input file, must set npow_dmeff >= 0 (relative velocity treatment not yet coded)");
+
+    /* sigma_dmeff (dmeff) in cm^2 */
+    class_call(parser_read_double(pfc,"sigma_dmeff",&param1,&flag1,errmsg),
+               errmsg,
+               errmsg);
+    class_call(parser_read_double(pfc,"log10sigma_dmeff",&param2,&flag2,errmsg),
+               errmsg,
+               errmsg);
+    class_test(((flag1 == _TRUE_) && (flag2 == _TRUE_)),
+               errmsg,
+               "In input file, you can only enter one of sigma_dmeff or log10sigma_dmeff, choose one");
+    if (flag1 == _TRUE_)
+      pba->sigma_dmeff = param1;
+    if (flag2 == _TRUE_)
+      pba->sigma_dmeff = pow(10,param2);
+    pba->sigma_dmeff /= 10000.; // convert to m^2
+
+    /** - target particle for dmeff interactions */
+    class_call(parser_read_string(pfc,"dmeff_target",&string1,&flag1,errmsg),
+               errmsg,
+               errmsg);
+
+    if (flag1 == _TRUE_) {
+
+      if ((strstr(string1,"baryon") != NULL)) {
+        pth->dmeff_target = baryon;
+      }
+      else if ((strstr(string1,"hydrogen") != NULL)) {
+        pth->dmeff_target = hydrogen;
+      }
+      else if ((strstr(string1,"helium") != NULL)) {
+        pth->dmeff_target = helium;
+      }
+      else{
+        class_stop(errmsg,"incomprehensible input '%s' for the field 'dmeff_target'",string1);
+      }
+
+    }
+
+  }
+
   /** - Omega_0_dcdmdr (DCDM) */
   class_call(parser_read_double(pfc,"Omega_dcdmdr",&param1,&flag1,errmsg),
              errmsg,
@@ -2551,6 +2618,7 @@ int input_read_parameters(
   class_read_double("a_ini_over_a_today_default",ppr->a_ini_over_a_today_default);
   class_read_double("back_integration_stepsize",ppr->back_integration_stepsize);
   class_read_double("tol_background_integration",ppr->tol_background_integration);
+  class_read_double("tol_Tdmeff_integration",ppr->tol_Tdmeff_integration);
   class_read_double("tol_initial_Omega_r",ppr->tol_initial_Omega_r);
   class_read_double("tol_ncdm_initial_w",ppr->tol_ncdm_initial_w);
   class_read_double("safe_phi_scf",ppr->safe_phi_scf);
@@ -2951,6 +3019,11 @@ int input_default_params(
   pba->Omega0_ur = 3.046*7./8.*pow(4./11.,4./3.)*pba->Omega0_g;
   pba->Omega0_b = 0.022032/pow(pba->h,2);
   pba->Omega0_cdm = 0.12038/pow(pba->h,2);
+  pba->Omega0_dmeff = 0.0;
+  pba->m_dmeff = 1.0 * 1.0e9 * _eV_ / (_c_ * _c_);
+  pba->npow_dmeff = 0.0;
+  pba->sigma_dmeff = 0.0;
+  pth->dmeff_target = hydrogen;
   pba->Omega0_dcdmdr = 0.0;
   pba->Omega0_dcdm = 0.0;
   pba->Gamma_dcdm = 0.0;
@@ -2977,7 +3050,7 @@ int input_default_params(
   pba->Omega0_k = 0.;
   pba->K = 0.;
   pba->sgnK = 0;
-  pba->Omega0_lambda = 1.-pba->Omega0_k-pba->Omega0_g-pba->Omega0_ur-pba->Omega0_b-pba->Omega0_cdm-pba->Omega0_ncdm_tot-pba->Omega0_dcdmdr;
+  pba->Omega0_lambda = 1.-pba->Omega0_k-pba->Omega0_g-pba->Omega0_ur-pba->Omega0_b-pba->Omega0_cdm-pba->Omega0_dmeff-pba->Omega0_ncdm_tot-pba->Omega0_dcdmdr;
   pba->Omega0_fld = 0.;
   pba->a_today = 1.;
   pba->use_ppf = _TRUE_;
@@ -3252,6 +3325,7 @@ int input_default_precision ( struct precision * ppr ) {
   ppr->a_ini_over_a_today_default = 1.e-14;
   ppr->back_integration_stepsize = 7.e-3;
   ppr->tol_background_integration = 1.e-2;
+  ppr->tol_Tdmeff_integration = 1.e-2;
 
   ppr->tol_initial_Omega_r = 1.e-4;
   ppr->tol_M_ncdm = 1.e-7;
@@ -3894,7 +3968,7 @@ int input_get_guess(double *xguess,
       ba.H0 = ba.h *  1.e5 / _c_;
       break;
     case Omega_dcdmdr:
-      Omega_M = ba.Omega0_cdm+ba.Omega0_dcdmdr+ba.Omega0_b;
+      Omega_M = ba.Omega0_cdm+ba.Omega0_dmeff+ba.Omega0_dcdmdr+ba.Omega0_b;
       /* This formula is exact in a Matter + Lambda Universe, but only
          for Omega_dcdm, not the combined.
          sqrt_one_minus_M = sqrt(1.0 - Omega_M);
@@ -3913,7 +3987,7 @@ int input_get_guess(double *xguess,
       //printf("x = Omega_ini_guess = %g, dxdy = %g\n",*xguess,*dxdy);
       break;
     case omega_dcdmdr:
-      Omega_M = ba.Omega0_cdm+ba.Omega0_dcdmdr+ba.Omega0_b;
+      Omega_M = ba.Omega0_cdm+ba.Omega0_dmeff+ba.Omega0_dcdmdr+ba.Omega0_b;
       /* This formula is exact in a Matter + Lambda Universe, but only
          for Omega_dcdm, not the combined.
          sqrt_one_minus_M = sqrt(1.0 - Omega_M);
@@ -3957,7 +4031,7 @@ int input_get_guess(double *xguess,
           Omega_ini_dcdm -> Omega_dcdmdr and
           omega_ini_dcdm -> omega_dcdmdr */
       Omega0_dcdmdr *=pfzw->target_value[index_guess];
-      Omega_M = ba.Omega0_cdm+Omega0_dcdmdr+ba.Omega0_b;
+      Omega_M = ba.Omega0_cdm+ba.Omega0_dmeff+Omega0_dcdmdr+ba.Omega0_b;
       gamma = ba.Gamma_dcdm/ba.H0;
       if (gamma < 1)
         a_decay = 1.0;

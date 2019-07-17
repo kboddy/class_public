@@ -53,6 +53,14 @@ struct background
 
   double Omega0_cdm; /**< \f$ \Omega_{0 cdm} \f$: cold dark matter */
 
+  double Omega0_dmeff; /**< \f$ \Omega_{0 dmeff} \f$ : dark matter with effective interactions */
+
+  double m_dmeff; /**< \f$ m_{dmeff} \f$ : mass of dark matter with effective interactions */
+
+  double sigma_dmeff; /**< \f$ \simga_{dmeff} \f$ : momentum-transfer cross section of dark matter with effective interactions, in units of cm^2 */
+
+  double npow_dmeff; /**< \f$ n_{dmeff} \f$ : power of relative velocity of momentum-transfer cross section for dark matter with effective interactions */
+
   double Omega0_lambda; /**< \f$ \Omega_{0_\Lambda} \f$: cosmological constant */
 
   double Omega0_fld; /**< \f$ \Omega_{0 de} \f$: fluid */
@@ -179,6 +187,11 @@ struct background
   int index_bg_rho_ur;        /**< relativistic neutrinos/relics density */
   int index_bg_rho_dcdm;      /**< dcdm density */
   int index_bg_rho_dr;        /**< dr density */
+  int index_bg_rho_dmeff;     /**< dmeff density */
+
+  int index_bg_Tdmeff;        /**< dmeff temperature */
+  int index_bg_Tb_dmeff;      /**< baryon temperature in presence of dmeff */
+  int index_bg_dTb_dmeff;     /**< baryon temperature in presence of dmeff, derivative wrt conformal time */
 
   int index_bg_phi_scf;       /**< scalar field value */
   int index_bg_phi_prime_scf; /**< scalar field derivative wrt conformal time */
@@ -276,6 +289,7 @@ struct background
   //@{
 
   short has_cdm;       /**< presence of cold dark matter? */
+  short has_dmeff;     /**< presence of dark matter with effective interactions? */
   short has_dcdm;      /**< presence of decaying cold dark matter? */
   short has_dr;        /**< presence of relativistic decay radiation? */
   short has_scf;       /**< presence of a scalar field? */

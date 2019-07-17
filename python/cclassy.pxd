@@ -52,6 +52,7 @@ cdef extern from "class.h":
         double Omega0_g
         double Omega0_b
         double Omega0_cdm
+        double Omega0_dmeff
         double Omega0_dcdm
         double Omega0_ncdm_tot
         double Omega0_lambda
@@ -84,6 +85,7 @@ cdef extern from "class.h":
         double rs_d
         double YHe
         double n_e
+        double z_dmeff_decoupling
 
         int tt_size
 

@@ -40,6 +40,16 @@ enum reionization_z_or_tau {
 };
 
 /**
+ * define the target particle with which dmeff interacts
+ */
+
+enum select_dmeff_target {
+  baryon,    /**< generic baryonic particle */
+  hydrogen,  /**< neutral and ionized hydrogen-1 */
+  helium     /**< neutral and ionized helium-4 */
+};
+
+/**
  * Two useful smooth step functions, for smoothing transitions in recfast.
  */
 
@@ -70,6 +80,8 @@ struct thermo
   enum reionization_parametrization reio_parametrization; /**< reionization scheme */
 
   enum reionization_z_or_tau reio_z_or_tau; /**< is the input parameter the reionization redshift or optical depth? */
+
+  enum select_dmeff_target dmeff_target; /**< define the particle with which dmeff interacts */
 
   double tau_reio; /**< if above set to tau, input value of reionization optical depth */
 
@@ -151,6 +163,14 @@ struct thermo
   double annihilation_f_halo; /** takes the contribution of DM annihilation in halos into account*/
   double annihilation_z_halo; /** characteristic redshift for DM annihilation in halos*/
 
+  /** parameters for DMeff */
+
+  double z_dmeff_decoupling; /* redshift at which Tdmeff decouples from photon-baryon fluid (relevant for dmeff_npow>=0) */
+
+  int index_ti_tau;
+  int index_ti_Tdm;
+  int ti_size; /* number of integration indices */
+
   //@}
 
   /** @name - all indices for the vector of thermodynamical (=th) quantities stored in table */
@@ -172,6 +192,11 @@ struct thermo
   int index_th_ddcb2;         /**< second derivative wrt conformal time of squared baryon sound speed  \f$ d^2 [c_b^2] / d \tau^2 \f$ (only computed if some non0-minimal tight-coupling schemes is requested) */
   int index_th_rate;          /**< maximum variation rate of \f$ exp^{-\kappa}\f$, g and \f$ (d g / d \tau) \f$, used for computing integration step in perturbation module */
   int index_th_r_d;           /**< simple analytic approximation to the photon comoving damping scale */
+  int index_th_Tdmeff;        /**< dmeff temperature \f$ T_{dmeff} \f$ */
+  int index_th_dkappa_dmeff;  /**< dmeff momentum exchange rate (units 1/Mpc) */
+  int index_th_ddkappa_dmeff; /**< dmeff momentum exchange rate derivative wrt tau */
+  int index_th_dkappaT_dmeff; /**< dmeff heat exchange rate (units 1/Mpc) */
+  int index_th_cdmeff2;       /**< dmeff speed of sound squared \f$ c_{dmeff}^2 \f$ */
   int th_size;                /**< size of thermodynamics vector */
 
   //@}
@@ -445,9 +470,11 @@ struct thermodynamics_parameters_and_workspace {
   struct background * pba;
   struct precision * ppr;
   struct recombination * preco;
+  struct thermo * pth;
 
   /* workspace */
   double * pvecback;
+  double * pvecthermo;
 
 };
 
@@ -481,6 +508,7 @@ extern "C" {
 			  );
 
   int thermodynamics_indices(
+			     struct background * pba,
 			     struct thermo * pthermo,
 			     struct recombination * preco,
 			     struct reionization * preio
@@ -598,6 +626,21 @@ extern "C" {
                           double after,
                           double width,
                           double * result);
+
+  int thermodynamics_dmeff_rate(struct background *pba,
+                                struct thermo *pth,
+                                double *pvecback,
+                                double *pvecthermo);
+
+  int thermodynamics_dmeff_temperature(struct precision *ppr,
+                                       struct background *pba,
+                                       struct thermo *pth);
+
+  int thermodynamics_dmeff_derivs(double tau,
+                                  double *y,
+                                  double *dy,
+                                  void * parameters_and_workspace,
+                                  ErrorMsg error_message);
 
 #ifdef __cplusplus
 }

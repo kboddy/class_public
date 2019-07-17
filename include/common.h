@@ -365,6 +365,10 @@ struct precision
    */
   double tol_background_integration;
 
+  /**
+   * parameter controlling precision of dmeff temperature integration
+   */
+  double tol_Tdmeff_integration;
 
   /**
    * parameter controlling how deep inside radiation domination must the
