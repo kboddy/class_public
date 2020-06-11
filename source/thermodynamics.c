@@ -2713,7 +2713,7 @@ int thermodynamics_recombination_with_hyrec(
 
   param.T0 = pba->T_cmb;
   param.obh2 = pba->Omega0_b*pba->h*pba->h;
-  param.omh2 = (pba->Omega0_b+pba->Omega0_cdm+pba->Omega0_ncdm_tot)*pba->h*pba->h;
+  param.omh2 = (pba->Omega0_b+pba->Omega0_cdm+pba->Omega0_ncdm_tot+pba->Omega0_dmeff)*pba->h*pba->h;
   param.okh2 = pba->Omega0_k*pba->h*pba->h;
   param.odeh2 = (pba->Omega0_lambda+pba->Omega0_fld)*pba->h*pba->h;
   class_call(background_w_fld(pba,pba->a_today,&w_fld,&dw_over_da_fld,&integral_fld), pba->error_message, pth->error_message);
@@ -3020,7 +3020,6 @@ int thermodynamics_recombination_with_recfast(
 
   /* needed for dmeff (tpaw expects pvecthermo and pth for dmeff, but is not used here) */
   double *pvecthermo;
-  class_alloc(pvecthermo,pth->th_size*sizeof(double),pth->error_message);
 
   /* contains all quantities relevant for the integration algorithm */
   struct generic_integrator_workspace gi;
@@ -3119,6 +3118,8 @@ int thermodynamics_recombination_with_recfast(
   tpaw.preco = preco;
   tpaw.pth   = pth;
   tpaw.pvecback = pvecback;
+
+  class_alloc(pvecthermo,pth->th_size*sizeof(double),pth->error_message);
   tpaw.pvecthermo = pvecthermo;
 
   /** - impose initial conditions at early times */

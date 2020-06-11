@@ -4111,12 +4111,12 @@ int perturb_initial_conditions(struct precision * ppr,
 
   double a,a_prime_over_a;
   double w_fld,dw_over_da_fld,integral_fld;
-  double delta_ur=0.,theta_ur=0.,shear_ur=0.,l3_ur=0.,eta=0.,delta_cdm=0.,theta_cdm=0.,alpha, alpha_prime;
+  double delta_ur=0.,theta_ur=0.,shear_ur=0.,l3_ur=0.,eta=0.,delta_cdm=0.,delta_dmeff=0.,theta_dmeff=0.,alpha, alpha_prime;
   double delta_dr=0;
   double q,epsilon,k2;
   int index_q,n_ncdm,idx;
   double rho_r,rho_m,rho_nu,rho_m_over_rho_r;
-  double fracnu,fracg,fracb,fraccdm,om;
+  double fracnu,fracg,fracb,fraccdm,fracdmeff,om;
   double ktau_two,ktau_three;
   double f_dr;
 
@@ -4196,8 +4196,15 @@ int perturb_initial_conditions(struct precision * ppr,
     /* f_b = Omega_b(t_i) / Omega_m(t_i) */
     fracb = ppw->pvecback[pba->index_bg_rho_b]/rho_m;
 
+    /* f_dmeff = Omega_dmeff(t_i) / Omega_m(t_i) */
+    if (pba->has_dmeff == _TRUE_){
+      fracdmeff = ppw->pvecback[pba->index_bg_rho_dmeff]/rho_m;
+    } else {
+      fracdmeff = 0.;
+    }
+
     /* f_cdm = Omega_cdm(t_i) / Omega_m(t_i) */
-    fraccdm = 1.-fracb;
+    fraccdm = 1.-fracb-fracdmeff;
 
     /* Omega_m(t_i) / Omega_r(t_i) */
     rho_m_over_rho_r = rho_m/rho_r;
@@ -4485,20 +4492,21 @@ int perturb_initial_conditions(struct precision * ppr,
 
       if (pba->has_cdm == _TRUE_)
         delta_cdm = ppw->pv->y[ppw->pv->index_pt_delta_cdm];
-      else if (pba->has_dmeff == _TRUE_){
-        delta_cdm = ppw->pv->y[ppw->pv->index_pt_delta_dmeff];
-        theta_cdm = ppw->pv->y[ppw->pv->index_pt_theta_dmeff];
-      }
       else if (pba->has_dcdm == _TRUE_)
         delta_cdm = ppw->pv->y[ppw->pv->index_pt_delta_dcdm];
       else
         delta_cdm=0.;
 
+      if (pba->has_dmeff == _TRUE_){
+        delta_dmeff = ppw->pv->y[ppw->pv->index_pt_delta_dmeff];
+        theta_dmeff = ppw->pv->y[ppw->pv->index_pt_theta_dmeff];
+      }
+
       // note: if there are no neutrinos, fracnu, delta_ur and theta_ur below will consistently be zero.
 
-      delta_tot = (fracg*ppw->pv->y[ppw->pv->index_pt_delta_g]+fracnu*delta_ur+rho_m_over_rho_r*(fracb*ppw->pv->y[ppw->pv->index_pt_delta_b]+fraccdm*delta_cdm))/(1.+rho_m_over_rho_r);
+      delta_tot = (fracg*ppw->pv->y[ppw->pv->index_pt_delta_g]+fracnu*delta_ur+rho_m_over_rho_r*(fracb*ppw->pv->y[ppw->pv->index_pt_delta_b]+fraccdm*delta_cdm+fracdmeff*delta_dmeff))/(1.+rho_m_over_rho_r);
 
-      velocity_tot = ((4./3.)*(fracg*ppw->pv->y[ppw->pv->index_pt_theta_g]+fracnu*theta_ur) + rho_m_over_rho_r*(fracb*ppw->pv->y[ppw->pv->index_pt_theta_b]+fraccdm*theta_cdm))/(1.+rho_m_over_rho_r);
+      velocity_tot = ((4./3.)*(fracg*ppw->pv->y[ppw->pv->index_pt_theta_g]+fracnu*theta_ur) + rho_m_over_rho_r*(fracb*ppw->pv->y[ppw->pv->index_pt_theta_b]+fracdmeff*theta_dmeff))/(1.+rho_m_over_rho_r);
 
       alpha = (eta + 3./2.*a_prime_over_a*a_prime_over_a/k/k/s2_squared*(delta_tot + 3.*a_prime_over_a/k/k*velocity_tot))/a_prime_over_a;
 
@@ -7291,13 +7299,14 @@ int perturb_derivs(double tau,
          +R*ppw->tca_slip)/(1.+R+beta_dmeff*R)
         +metric_euler;
 
-      if(pba->has_dmeff == _TRUE_){
+      if(pba->has_dmeff == _TRUE_ && rate_dmeff > 0){
         tau_dmeff = 1./rate_dmeff;
         dtau_dmeff = -pvecthermo[pth->index_th_ddkappa_dmeff]*tau_dmeff*tau_dmeff;
         dy[pv->index_pt_theta_b] +=
           (R*beta_dmeff*(a_prime_over_a-dtau_dmeff/tau_dmeff)*(theta_dmeff-theta_b)
            + R_dmeff/tau_dmeff*(theta_dmeff-theta_b)
-           + R*beta_dmeff*dy[pv->index_pt_theta_dmeff]) / (1.+R+beta_dmeff*R);
+           + R*beta_dmeff*dy[pv->index_pt_theta_dmeff]
+           - R*beta_dmeff*metric_euler) / (1.+R+beta_dmeff*R);
       }
 
     }

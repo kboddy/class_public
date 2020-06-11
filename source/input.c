@@ -779,8 +779,11 @@ int input_read_parameters(
     Omega_tot += pba->Omega0_dmeff;
 
     /* m_dmeff (dmeff) in kg */
-    class_read_double("m_dmeff",pba->m_dmeff);
-    pba->m_dmeff *= 1.0e9 * _eV_ / (_c_ * _c_); // convert GeV to kg
+    class_call(parser_read_double(pfc,"m_dmeff",&param1,&flag1,errmsg),
+               errmsg,
+               errmsg);
+    if (flag1 == _TRUE_)
+      pba->m_dmeff = param1 * 1.0e9 * _eV_ / (_c_ * _c_); // convert GeV to kg
 
     /* npow_dmeff (dmeff) */
     class_read_double("npow_dmeff",pba->npow_dmeff);
@@ -797,10 +800,9 @@ int input_read_parameters(
                errmsg,
                "In input file, you can only enter one of sigma_dmeff or log10sigma_dmeff, choose one");
     if (flag1 == _TRUE_)
-      pba->sigma_dmeff = param1;
+      pba->sigma_dmeff = param1 / 10000.; // convert to m^2
     if (flag2 == _TRUE_)
-      pba->sigma_dmeff = pow(10,param2);
-    pba->sigma_dmeff /= 10000.; // convert to m^2
+      pba->sigma_dmeff = pow(10,param2) / 10000.; // convert to m^2
 
     /** - target particle for dmeff interactions */
     class_call(parser_read_string(pfc,"dmeff_target",&string1,&flag1,errmsg),
