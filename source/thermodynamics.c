@@ -3863,7 +3863,7 @@ int thermodynamics_dmeff_rate(struct background *pba,
                               double *pvecback,
                               double *pvecthermo){
 
-  double z, a, H, rho_baryon, mu;
+  double z, a, H, rho_baryon, mu, nH;
   double mass_target,rho_target;
   double Tb, Tdmeff, dTb, dTdmeff;
   double cn, vth2, rate_mom, rate_heat;
@@ -3886,6 +3886,7 @@ int thermodynamics_dmeff_rate(struct background *pba,
 
   /* baryon density (which includes He), converted into units of kg / m^2 / Mpc */
   rho_baryon = pvecback[pba->index_bg_rho_b] * 3.*_c_*_c_/(8.*_PI_*_G_*_Mpc_over_m_);
+  nH = rho_baryon/_m_H_ * (1.-pth->YHe);
   mu = _m_H_/(1. + (1./_not4_ - 1.) * pth->YHe + pvecthermo[pth->index_th_xe] * (1.-pth->YHe));
 
   /* Extract temperatures. */
@@ -3904,6 +3905,10 @@ int thermodynamics_dmeff_rate(struct background *pba,
   else if (pth->dmeff_target == helium){ // neutral and ionized helium
     mass_target = _m_H_ * _not4_;
     rho_target  = pth->YHe*rho_baryon;
+  }
+  else if (pth->dmeff_target == electron){ // free electrons
+    mass_target = _m_e_;
+    rho_target  = _m_e_ * nH * pvecthermo[pth->index_th_xe];
   }
 
   /* thermal dispersion */
