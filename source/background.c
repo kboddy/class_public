@@ -444,6 +444,10 @@ int background_functions(
     pvecback[pba->index_bg_dkappa_dmeff]  = 0.;
     pvecback[pba->index_bg_dkappaT_dmeff] = 0.;
     pvecback[pba->index_bg_cdmeff2]       = 0.;
+    pvecback[pba->index_bg_Vrel_dmeff]    = pba->Vrel_dmeff;
+    if((1./a - 1.) < 1000.){ // if z<1000, scale Vrms by (1+z)
+      pvecback[pba->index_bg_Vrel_dmeff] *= (1./a) / 1001.; // (1+z)/(1+1000)
+    }
   }
 
   /** - compute other quantities in the exhaustive, redundant format */
