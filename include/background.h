@@ -190,8 +190,9 @@ struct background
   int index_bg_rho_dmeff;     /**< dmeff density */
 
   int index_bg_Tdmeff;        /**< dmeff temperature */
-  int index_bg_Tb_dmeff;      /**< baryon temperature in presence of dmeff */
-  int index_bg_dTb_dmeff;     /**< baryon temperature in presence of dmeff, derivative wrt conformal time */
+  int index_bg_dkappa_dmeff;  /**< dmeff momentum exchange rate (units 1/Mpc) */
+  int index_bg_dkappaT_dmeff; /**< dmeff heat exchange rate (units 1/Mpc) */
+  int index_bg_cdmeff2;       /**< dmeff speed of sound squared \f$ c_{dmeff}^2 \f$ */
 
   int index_bg_phi_scf;       /**< scalar field value */
   int index_bg_phi_prime_scf; /**< scalar field derivative wrt conformal time */

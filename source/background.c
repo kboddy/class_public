@@ -440,9 +440,10 @@ int background_functions(
 
   /** - make place holders for dmeff quantities that are computed in thermodynamics */
   if (pba->has_dmeff == _TRUE_) {
-    pvecback[pba->index_bg_Tdmeff]    = pba->T_cmb / a;
-    pvecback[pba->index_bg_Tb_dmeff]  = pba->T_cmb / a;
-    pvecback[pba->index_bg_dTb_dmeff] = - pba->T_cmb * pvecback[pba->index_bg_H];
+    pvecback[pba->index_bg_Tdmeff]        = pba->T_cmb / a;
+    pvecback[pba->index_bg_dkappa_dmeff]  = 0.;
+    pvecback[pba->index_bg_dkappaT_dmeff] = 0.;
+    pvecback[pba->index_bg_cdmeff2]       = 0.;
   }
 
   /** - compute other quantities in the exhaustive, redundant format */
@@ -912,11 +913,14 @@ int background_indices(
   /* - index for Tdmeff */
   class_define_index(pba->index_bg_Tdmeff,pba->has_dmeff,index_bg,1);
 
-  /* - index for Tb (in presence of dmeff) */
-  class_define_index(pba->index_bg_Tb_dmeff,pba->has_dmeff,index_bg,1);
+  /* - index for dmeff momentum exchange rate */
+  class_define_index(pba->index_bg_dkappa_dmeff,pba->has_dmeff,index_bg,1);
 
-  /* - index for derivative of Tb wrt conformal time (in presence of dmeff) */
-  class_define_index(pba->index_bg_dTb_dmeff,pba->has_dmeff,index_bg,1);
+  /* - index for dmeff heat exchange rate */
+  class_define_index(pba->index_bg_dkappaT_dmeff,pba->has_dmeff,index_bg,1);
+
+  /* - index for dmeff speed of sound squared */
+  class_define_index(pba->index_bg_cdmeff2,pba->has_dmeff,index_bg,1);
 
   /* - indices for ncdm. We only define the indices for ncdm1
      (density, pressure, pseudo-pressure), the other ncdm indices
@@ -2201,8 +2205,9 @@ int background_output_titles(struct background * pba,
   class_store_columntitle(titles,"(.)rho_cdm",pba->has_cdm);
   class_store_columntitle(titles,"(.)rho_dmeff",pba->has_dmeff);
   class_store_columntitle(titles,"T_dmeff",pba->has_dmeff);
-  class_store_columntitle(titles,"Tb",pba->has_dmeff);
-  //class_store_columntitle(titles,"Tb'",pba->has_dmeff);
+  class_store_columntitle(titles,"dkappa_dmeff",pba->has_dmeff);
+  class_store_columntitle(titles,"dkappaT_dmeff",pba->has_dmeff);
+  class_store_columntitle(titles,"cdmeff2",pba->has_dmeff);
   if (pba->has_ncdm == _TRUE_){
     for (n=0; n<pba->N_ncdm; n++){
       sprintf(tmp,"(.)rho_ncdm[%d]",n);
@@ -2259,8 +2264,9 @@ int background_output_data(
     class_store_double(dataptr,pvecback[pba->index_bg_rho_cdm],pba->has_cdm,storeidx);
     class_store_double(dataptr,pvecback[pba->index_bg_rho_dmeff],pba->has_dmeff,storeidx);
     class_store_double(dataptr,pvecback[pba->index_bg_Tdmeff],pba->has_dmeff,storeidx);
-    class_store_double(dataptr,pvecback[pba->index_bg_Tb_dmeff],pba->has_dmeff,storeidx);
-    //class_store_double(dataptr,pvecback[pba->index_bg_dTb_dmeff],pba->has_dmeff,storeidx);
+    class_store_double(dataptr,pvecback[pba->index_bg_dkappa_dmeff],pba->has_dmeff,storeidx);
+    class_store_double(dataptr,pvecback[pba->index_bg_dkappaT_dmeff],pba->has_dmeff,storeidx);
+    class_store_double(dataptr,pvecback[pba->index_bg_cdmeff2],pba->has_dmeff,storeidx);
     if (pba->has_ncdm == _TRUE_){
       for (n=0; n<pba->N_ncdm; n++){
         class_store_double(dataptr,pvecback[pba->index_bg_rho_ncdm1+n],_TRUE_,storeidx);
