@@ -917,6 +917,9 @@ int background_indices(
   /* - index for Tdmeff */
   class_define_index(pba->index_bg_Tdmeff,pba->has_dmeff,index_bg,1);
 
+  /* - index for Vrel_dmeff */
+  class_define_index(pba->index_bg_Vrel_dmeff,pba->has_dmeff,index_bg,1);
+
   /* - index for dmeff momentum exchange rate */
   class_define_index(pba->index_bg_dkappa_dmeff,pba->has_dmeff,index_bg,1);
 
@@ -2209,6 +2212,7 @@ int background_output_titles(struct background * pba,
   class_store_columntitle(titles,"(.)rho_cdm",pba->has_cdm);
   class_store_columntitle(titles,"(.)rho_dmeff",pba->has_dmeff);
   class_store_columntitle(titles,"T_dmeff",pba->has_dmeff);
+  class_store_columntitle(titles,"Vrel_dmeff",pba->has_dmeff);
   class_store_columntitle(titles,"dkappa_dmeff",pba->has_dmeff);
   class_store_columntitle(titles,"dkappaT_dmeff",pba->has_dmeff);
   class_store_columntitle(titles,"cdmeff2",pba->has_dmeff);
@@ -2268,6 +2272,7 @@ int background_output_data(
     class_store_double(dataptr,pvecback[pba->index_bg_rho_cdm],pba->has_cdm,storeidx);
     class_store_double(dataptr,pvecback[pba->index_bg_rho_dmeff],pba->has_dmeff,storeidx);
     class_store_double(dataptr,pvecback[pba->index_bg_Tdmeff],pba->has_dmeff,storeidx);
+    class_store_double(dataptr,pvecback[pba->index_bg_Vrel_dmeff],pba->has_dmeff,storeidx);
     class_store_double(dataptr,pvecback[pba->index_bg_dkappa_dmeff],pba->has_dmeff,storeidx);
     class_store_double(dataptr,pvecback[pba->index_bg_dkappaT_dmeff],pba->has_dmeff,storeidx);
     class_store_double(dataptr,pvecback[pba->index_bg_cdmeff2],pba->has_dmeff,storeidx);
