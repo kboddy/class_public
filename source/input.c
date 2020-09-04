@@ -793,6 +793,7 @@ int input_read_parameters(
     class_call(parser_read_double(pfc,"sigma_dmeff",&param1,&flag1,errmsg),
                errmsg,
                errmsg);
+    
     class_call(parser_read_double(pfc,"log10sigma_dmeff",&param2,&flag2,errmsg),
                errmsg,
                errmsg);
@@ -831,7 +832,7 @@ int input_read_parameters(
                errmsg,
                errmsg);
     if (flag1 == _TRUE_)
-      pba->Vrel_dmeff *= 1.0e3; //convert to m/s
+      pba->Vrel_dmeff = param1 * 1.0e3; //convert to m/s
 
   }
 

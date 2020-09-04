@@ -3446,9 +3446,9 @@ int perturb_vector_init(
 
       }
 
-      class_test(ppw->approx[ppw->index_ap_tca] == (int)tca_off,
-                 ppt->error_message,
-                 "scalar initial conditions assume tight-coupling approximation turned on");
+      //class_test(ppw->approx[ppw->index_ap_tca] == (int)tca_off,
+      //           ppt->error_message,
+      //           "scalar initial conditions assume tight-coupling approximation turned on");
 
     }
 
