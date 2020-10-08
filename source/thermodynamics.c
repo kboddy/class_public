@@ -3935,18 +3935,14 @@ int thermodynamics_dmeff_rate(struct background *pba,
     rho_target  = pth->YHe*rho_baryon;
   }
 
-  /* rates */
-  
   cn = pow(2.,(pba->npow_dmeff + 5.)/2.) * tgamma(3. + pba->npow_dmeff / 2.) / (3.*_SQRT_PI_);
   Vrel2 = pow(pvecback[pba->index_bg_Vrel_dmeff],2);
-  
-  /* thermal dispersion */
   vth2 = (Tdmeff*_k_B_) / pba->m_dmeff + (Tb*_k_B_) / mass_target + Vrel2/3.;
 
   rate_mom  = a * rho_target * cn * pba->sigma_dmeff/(pba->m_dmeff + mass_target) * pow(vth2/(_c_*_c_), (pba->npow_dmeff + 1.)/2.);
   rate_heat = rate_mom * pba->m_dmeff / (pba->m_dmeff + mass_target);
 
-  pvecthermo[pth->index_th_dkappa_dmeff]  += rate_mom; 
+  pvecthermo[pth->index_th_dkappa_dmeff]  += rate_mom;
   pvecthermo[pth->index_th_dkappaT_dmeff] += rate_heat;
 
   /* derivatives */

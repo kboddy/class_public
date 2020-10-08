@@ -448,7 +448,6 @@ int background_functions(
     if((1./a - 1.) < 1000.){ // if z<1000, scale Vrms by (1+z)
       pvecback[pba->index_bg_Vrel_dmeff] *= (1./a) / 1001.; // (1+z)/(1+1000)
     }
-    //printf("z=%e, %e\n",1./a-1,pba->Vrel_dmeff); //VG
   }
 
   /** - compute other quantities in the exhaustive, redundant format */

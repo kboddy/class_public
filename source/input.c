@@ -793,7 +793,6 @@ int input_read_parameters(
     class_call(parser_read_double(pfc,"sigma_dmeff",&param1,&flag1,errmsg),
                errmsg,
                errmsg);
-    
     class_call(parser_read_double(pfc,"log10sigma_dmeff",&param2,&flag2,errmsg),
                errmsg,
                errmsg);
