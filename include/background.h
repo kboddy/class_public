@@ -61,6 +61,8 @@ struct background
 
   double npow_dmeff; /**< \f$ n_{dmeff} \f$ : power of relative velocity of momentum-transfer cross section for dark matter with effective interactions */
 
+  double Vrel_dmeff; /**< \f$ Vrel_{dmeff} \f$ : initial RMS relative bulk velocity between DM and baryons (at z >> z_rec) */
+
   double Omega0_lambda; /**< \f$ \Omega_{0_\Lambda} \f$: cosmological constant */
 
   double Omega0_fld; /**< \f$ \Omega_{0 de} \f$: fluid */
@@ -190,6 +192,7 @@ struct background
   int index_bg_rho_dmeff;     /**< dmeff density */
 
   int index_bg_Tdmeff;        /**< dmeff temperature */
+  int index_bg_Vrel_dmeff;    /**< dmeff RMS relative bulk velocity of DM and baryons */
   int index_bg_dkappa_dmeff;  /**< dmeff momentum exchange rate (units 1/Mpc) */
   int index_bg_dkappaT_dmeff; /**< dmeff heat exchange rate (units 1/Mpc) */
   int index_bg_cdmeff2;       /**< dmeff speed of sound squared \f$ c_{dmeff}^2 \f$ */

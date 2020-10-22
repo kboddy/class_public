@@ -787,7 +787,7 @@ int input_read_parameters(
 
     /* npow_dmeff (dmeff) */
     class_read_double("npow_dmeff",pba->npow_dmeff);
-    class_test(pba->npow_dmeff < 0,errmsg,"In input file, must set npow_dmeff >= 0 (relative velocity treatment not yet coded)");
+    class_test(pba->npow_dmeff < -4,errmsg,"In input file, must set npow_dmeff >= -4");
 
     /* sigma_dmeff (dmeff) in cm^2 */
     class_call(parser_read_double(pfc,"sigma_dmeff",&param1,&flag1,errmsg),
@@ -825,6 +825,13 @@ int input_read_parameters(
       }
 
     }
+
+    /* relative bulk velocity dispersion between DM and baryons in km/s */
+    class_call(parser_read_double(pfc,"Vrel_dmeff",&param1,&flag1,errmsg),
+               errmsg,
+               errmsg);
+    if (flag1 == _TRUE_)
+      pba->Vrel_dmeff = param1 * 1.0e3; //convert to m/s
 
   }
 
@@ -3026,6 +3033,7 @@ int input_default_params(
   pba->npow_dmeff = 0.0;
   pba->sigma_dmeff = 0.0;
   pth->dmeff_target = hydrogen;
+  pba->Vrel_dmeff = 0.0;
   pba->Omega0_dcdmdr = 0.0;
   pba->Omega0_dcdm = 0.0;
   pba->Gamma_dcdm = 0.0;
