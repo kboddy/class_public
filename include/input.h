@@ -209,6 +209,21 @@ extern "C" {
                             ErrorMsg errmsg
                             );
 
+  int input_read_precisions(
+                            struct file_content * pfc,
+                            struct precision * ppr,
+                            struct background * pba,
+                            struct thermo *pth,
+                            struct perturbs *ppt,
+                            struct transfers *ptr,
+                            struct primordial *ppm,
+                            struct spectra *psp,
+                            struct nonlinear *pnl,
+                            struct lensing *ple,
+                            struct output *pop,
+                            ErrorMsg errmsg
+                            );
+
   int input_default_params(
 			   struct background *pba,
 			   struct thermo *pth,
@@ -262,6 +277,7 @@ extern "C" {
   int input_find_root(double *xzero,
                       int *fevals,
                       struct fzerofun_workspace *pfzw,
+                      double tol,
                       ErrorMsg errmsg);
 
   int file_exists(const char *fname);
