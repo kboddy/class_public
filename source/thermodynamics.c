@@ -389,7 +389,7 @@ int thermodynamics_init(
 
   class_test((pth->annihilation>0) && ((pba->has_cdm==_FALSE_)&&(pba->has_dmeff==_FALSE_)&&(pba->has_idm_dr==_FALSE_)),
              pth->error_message,
-             "CDM annihilation effects require the presence of CDM or IDM!");
+             "CDM annihilation effects require the presence of CDM, DMeff, or IDM!");
 
   class_test((pth->annihilation_f_halo>0) && (pth->recombination==recfast),
              pth->error_message,
@@ -413,7 +413,7 @@ int thermodynamics_init(
 
   class_test((pth->decay>0)&&((pba->has_cdm==_FALSE_)&&(pba->has_dmeff==_FALSE_)&&(pba->has_idm_dr==_FALSE_)),
              pth->error_message,
-             "CDM decay effects require the presence of CDM or IDM!");
+             "CDM decay effects require the presence of CDM, DMeff, or IDM!");
 
   /* tests in order to prevent segmentation fault in the following */
   class_test(_not4_ == 0.,
@@ -1283,6 +1283,9 @@ int thermodynamics_init(
       else{
         printf(" -> computation of decoupling time of idm_dr and idr skipped, because z would not be in z_table\n");
       }
+    }
+    if(pba->has_dmeff == _TRUE_){
+      printf(" -> dmeff couples from baryons at z=%e\n",pth->z_dmeff_decoupling);
     }
     printf(" -> recombination at z = %f (max of visibility function)\n",pth->z_rec);
     printf("    corresponding to conformal time = %f Mpc\n",pth->tau_rec);

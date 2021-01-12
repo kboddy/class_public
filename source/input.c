@@ -652,6 +652,7 @@ int input_read_parameters(
   double stat_f_idr = 7./8.;
 
   double Omega_tot;
+  double Omega0_cdm_orig;
 
   int i;
 
@@ -909,25 +910,50 @@ int input_read_parameters(
   if ((ppt->gauge == synchronous) && (pba->Omega0_cdm==0)) pba->Omega0_cdm = ppr->Omega0_cdm_min_synchronous;
 
   Omega_tot += pba->Omega0_cdm;
+  Omega0_cdm_orig = pba->Omega0_cdm;
 
-  /* Omega_0_dmeff (dmeff) */
+  /** - Omega_0_dmeff (dmeff) */
   class_call(parser_read_double(pfc,"Omega_dmeff",&param1,&flag1,errmsg),
              errmsg,
              errmsg);
   class_call(parser_read_double(pfc,"omega_dmeff",&param2,&flag2,errmsg),
              errmsg,
              errmsg);
-  class_test(((flag1 == _TRUE_) && (flag2 == _TRUE_)),
+  class_call(parser_read_double(pfc,"f_dmeff",&param3,&flag3,errmsg),
              errmsg,
-             "In input file, you can only enter one of Omega_dmeff or omega_dmeff, choose one");
+             errmsg);
+  class_test(class_at_least_two_of_three(flag1,flag2,flag3),
+             errmsg,
+             "In input file, you can only enter one of Omega_dmeff, omega_dmeff, or f_dmeff. Choose one.");
+
   if (flag1 == _TRUE_)
     pba->Omega0_dmeff = param1;
   if (flag2 == _TRUE_)
     pba->Omega0_dmeff = param2/pba->h/pba->h;
+  if (flag3 == _TRUE_) {
+    class_test((param3 < 0.) || (param3 > 1.),
+               errmsg,
+               "The fraction of dmeff must be between 0 and 1. You asked for f_dmeff=%e",param3);
+    class_test((param3 > 0.) && (pba->Omega0_cdm == 0.),
+               errmsg,
+               "If you want a fraction of dmeff, you should not set the fraction of CDM to zero.");
+
+    pba->Omega0_dmeff = param3 * pba->Omega0_cdm;
+    /* readjust Omega0_cdm */
+    pba->Omega0_cdm -= pba->Omega0_dmeff;
+    /* to be consistent, remove same amount from Omega_tot */
+    Omega_tot -= pba->Omega0_dmeff;
+    /* avoid Omega0_cdm =0 in synchronous gauge */
+    if ((ppt->gauge == synchronous) && (pba->Omega0_cdm==0)) {
+      pba->Omega0_cdm += ppr->Omega0_cdm_min_synchronous;
+      Omega_tot += ppr->Omega0_cdm_min_synchronous;
+      pba->Omega0_dmeff -= ppr->Omega0_cdm_min_synchronous;
+    }
+  }
+
+  Omega_tot += pba->Omega0_dmeff;
 
   if(pba->Omega0_dmeff > 0){
-
-    Omega_tot += pba->Omega0_dmeff;
 
     /* m_dmeff (dmeff) in kg */
     class_call(parser_read_double(pfc,"m_dmeff",&param1,&flag1,errmsg),
@@ -1015,15 +1041,23 @@ int input_read_parameters(
                errmsg,
                "If you want a fraction of interacting DM with DR, to be consistent, you should not set the fraction of CDM to zero");
 
-    pba->Omega0_idm_dr = param3 * pba->Omega0_cdm;
+    pba->Omega0_idm_dr = param3 * Omega0_cdm_orig;
     /* readjust Omega0_cdm */
     pba->Omega0_cdm -= pba->Omega0_idm_dr;
+    /* protect against different interacting species claiming more than 100% of CDM */
+    class_test(pba->Omega0_cdm < 0.,
+               errmsg,
+               "The sum of fractions of interacting species that comprise CDM exceeds 1.");
     /* to be consistent, remove same amount from Omega_tot */
     Omega_tot -= pba->Omega0_idm_dr;
     /* avoid Omega0_cdm =0 in synchronous gauge */
     if ((ppt->gauge == synchronous) && (pba->Omega0_cdm==0)) {
       pba->Omega0_cdm += ppr->Omega0_cdm_min_synchronous;
       Omega_tot += ppr->Omega0_cdm_min_synchronous;
+      /* Note: if two interacting DM species together claim 100% of CDM,
+         they do not share the density reduction needed to provide CDM with a
+         minimum density. Only the last species defined in input experiences the
+         reduction. */
       pba->Omega0_idm_dr -= ppr->Omega0_cdm_min_synchronous;
     }
   }

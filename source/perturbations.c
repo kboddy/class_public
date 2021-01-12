@@ -227,6 +227,7 @@ int perturb_output_data(
           class_store_double(dataptr,tk[ppt->index_tp_delta_g],ppt->has_source_delta_g,storeidx);
           class_store_double(dataptr,tk[ppt->index_tp_delta_b],ppt->has_source_delta_b,storeidx);
           class_store_double(dataptr,tk[ppt->index_tp_delta_cdm],ppt->has_source_delta_cdm,storeidx);
+          class_store_double(dataptr,tk[ppt->index_tp_delta_dmeff],ppt->has_source_delta_dmeff,storeidx);
           class_store_double(dataptr,tk[ppt->index_tp_delta_idm_dr],ppt->has_source_delta_idm_dr,storeidx);
           class_store_double(dataptr,tk[ppt->index_tp_delta_fld],ppt->has_source_delta_fld,storeidx);
           class_store_double(dataptr,tk[ppt->index_tp_delta_ur],ppt->has_source_delta_ur,storeidx);
@@ -255,6 +256,7 @@ int perturb_output_data(
           class_store_double(dataptr,tk[ppt->index_tp_theta_g],ppt->has_source_theta_g,storeidx);
           class_store_double(dataptr,tk[ppt->index_tp_theta_b],ppt->has_source_theta_b,storeidx);
           class_store_double(dataptr,tk[ppt->index_tp_theta_cdm],ppt->has_source_theta_cdm,storeidx);
+          class_store_double(dataptr,tk[ppt->index_tp_theta_dmeff],ppt->has_source_theta_dmeff,storeidx);
           class_store_double(dataptr,tk[ppt->index_tp_theta_idm_dr],ppt->has_source_theta_idm_dr,storeidx);
           class_store_double(dataptr,tk[ppt->index_tp_theta_fld],ppt->has_source_theta_fld,storeidx);
           class_store_double(dataptr,tk[ppt->index_tp_theta_ur],ppt->has_source_theta_ur,storeidx);
@@ -276,6 +278,7 @@ int perturb_output_data(
 
         /* rescale and reorder the matter transfer functions following the CMBFAST/CAMB convention */
         class_store_double_or_default(dataptr,-tk[ppt->index_tp_delta_cdm]/k2,ppt->has_source_delta_cdm,storeidx,0.0);
+        class_store_double_or_default(dataptr,-tk[ppt->index_tp_delta_dmeff]/k2,ppt->has_source_delta_dmeff,storeidx,0.0);
         class_store_double_or_default(dataptr,-tk[ppt->index_tp_delta_idm_dr]/k2,ppt->has_source_delta_idm_dr,storeidx,0.0);
         class_store_double_or_default(dataptr,-tk[ppt->index_tp_delta_b]/k2,ppt->has_source_delta_b,storeidx,0.0);
         class_store_double_or_default(dataptr,-tk[ppt->index_tp_delta_g]/k2,ppt->has_source_delta_g,storeidx,0.0);
@@ -320,6 +323,7 @@ int perturb_output_titles(
       class_store_columntitle(titles,"d_g",_TRUE_);
       class_store_columntitle(titles,"d_b",_TRUE_);
       class_store_columntitle(titles,"d_cdm",pba->has_cdm);
+      class_store_columntitle(titles,"d_dmeff",pba->has_dmeff);
       class_store_columntitle(titles,"d_idm_dr",pba->has_idm_dr);
       class_store_columntitle(titles,"d_fld",pba->has_fld);
       class_store_columntitle(titles,"d_ur",pba->has_ur);
@@ -348,6 +352,7 @@ int perturb_output_titles(
       class_store_columntitle(titles,"t_g",_TRUE_);
       class_store_columntitle(titles,"t_b",_TRUE_);
       class_store_columntitle(titles,"t_cdm",((pba->has_cdm == _TRUE_) && (ppt->gauge != synchronous)));
+      class_store_columntitle(titles,"t_dmeff",pba->has_dmeff);
       class_store_columntitle(titles,"t_idm_dr",pba->has_idm_dr);
       class_store_columntitle(titles,"t_fld",pba->has_fld);
       class_store_columntitle(titles,"t_ur",pba->has_ur);
@@ -369,6 +374,7 @@ int perturb_output_titles(
 
     class_store_columntitle(titles,"k (h/Mpc)",_TRUE_);
     class_store_columntitle(titles,"-T_cdm/k2",_TRUE_);
+    class_store_columntitle(titles,"-T_dmeff/k2",_TRUE_);
     class_store_columntitle(titles,"-T_idm_dr/k2",_TRUE_);
     class_store_columntitle(titles,"-T_b/k2",_TRUE_);
     class_store_columntitle(titles,"-T_g/k2",_TRUE_);
@@ -5114,7 +5120,7 @@ int perturb_initial_conditions(struct precision * ppr,
 
   double a,a_prime_over_a;
   double w_fld,dw_over_da_fld,integral_fld;
-  double delta_ur=0.,theta_ur=0.,shear_ur=0.,l3_ur=0.,eta=0.,delta_cdm=0.,delta_dmeff=0.,theta_dmeff=0.,alpha, alpha_prime;
+  double delta_ur=0.,theta_ur=0.,shear_ur=0.,l3_ur=0.,eta=0.,delta_cdm=0.,theta_dmeff=0.,alpha, alpha_prime;
   double delta_dr=0;
   double q,epsilon,k2;
   int index_q,n_ncdm,idx;
@@ -5216,7 +5222,7 @@ int perturb_initial_conditions(struct precision * ppr,
     }
 
     /* f_cdm = Omega_cdm(t_i) / Omega_m(t_i) */
-    fraccdm = 1.-fracb-fracdmeff;
+    fraccdm = 1.-fracb;
 
     /* Omega_m(t_i) / Omega_r(t_i) */
     rho_m_over_rho_r = rho_m/rho_r;
@@ -5528,17 +5534,18 @@ int perturb_initial_conditions(struct precision * ppr,
         delta_cdm = ppw->pv->y[ppw->pv->index_pt_delta_dcdm];
       else if (pba->has_idm_dr == _TRUE_)
         delta_cdm = ppw->pv->y[ppw->pv->index_pt_delta_idm_dr];
+      else if (pba->has_dmeff == _TRUE_)
+        delta_cdm = ppw->pv->y[ppw->pv->index_pt_delta_dmeff];
       else
         delta_cdm=0.;
 
       if (pba->has_dmeff == _TRUE_){
-        delta_dmeff = ppw->pv->y[ppw->pv->index_pt_delta_dmeff];
         theta_dmeff = ppw->pv->y[ppw->pv->index_pt_theta_dmeff];
       }
 
       // note: if there are no neutrinos, fracnu, delta_ur and theta_ur below will consistently be zero.
 
-      delta_tot = (fracg*ppw->pv->y[ppw->pv->index_pt_delta_g]+fracnu*delta_ur+rho_m_over_rho_r*(fracb*ppw->pv->y[ppw->pv->index_pt_delta_b]+fraccdm*delta_cdm+fracdmeff*delta_dmeff))/(1.+rho_m_over_rho_r);
+      delta_tot = (fracg*ppw->pv->y[ppw->pv->index_pt_delta_g]+fracnu*delta_ur+rho_m_over_rho_r*(fracb*ppw->pv->y[ppw->pv->index_pt_delta_b]+fraccdm*delta_cdm))/(1.+rho_m_over_rho_r);
 
       velocity_tot = ((4./3.)*(fracg*ppw->pv->y[ppw->pv->index_pt_theta_g]+fracnu*theta_ur) + rho_m_over_rho_r*(fracb*ppw->pv->y[ppw->pv->index_pt_theta_b]+fracdmeff*theta_dmeff))/(1.+rho_m_over_rho_r);
 
@@ -6715,7 +6722,7 @@ int perturb_total_stress_energy(
     if (pba->has_dmeff == _TRUE_) {
       ppw->delta_rho += ppw->pvecback[pba->index_bg_rho_dmeff]*y[ppw->pv->index_pt_delta_dmeff];
       ppw->rho_plus_p_theta += ppw->pvecback[pba->index_bg_rho_dmeff]*y[ppw->pv->index_pt_theta_dmeff];
-      rho_plus_p_tot += ppw->pvecback[pba->index_bg_rho_dmeff];
+      ppw->rho_plus_p_tot += ppw->pvecback[pba->index_bg_rho_dmeff];
     }
 
     /* dcdm contribution */
@@ -7517,7 +7524,8 @@ int perturb_sources(
 
      /* delta_dmeff */
     if (ppt->has_source_delta_dmeff == _TRUE_) {
-      _set_source_(ppt->index_tp_delta_dmeff) = y[ppw->pv->index_pt_delta_dmeff];
+      _set_source_(ppt->index_tp_delta_dmeff) = y[ppw->pv->index_pt_delta_dmeff]
+        + 3.*a_prime_over_a*theta_over_k2; // N-body gauge correction
     }
 
     /* delta_dcdm */
@@ -7644,7 +7652,8 @@ int perturb_sources(
 
     /* theta_dmeff */
     if (ppt->has_source_theta_dmeff == _TRUE_) {
-      _set_source_(ppt->index_tp_theta_dmeff) = y[ppw->pv->index_pt_theta_dmeff];
+      _set_source_(ppt->index_tp_theta_dmeff) = y[ppw->pv->index_pt_theta_dmeff]
+        + theta_shift; // N-body gauge correction
     }
 
     /* theta_dcdm */

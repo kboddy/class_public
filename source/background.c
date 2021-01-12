@@ -2671,6 +2671,10 @@ int background_output_budget(
       _class_print_species_("Cold Dark Matter",cdm);
       budget_matter+=pba->Omega0_cdm;
     }
+    if(pba->has_dmeff){
+      _class_print_species_("Interacting DM - baryons",dmeff);
+      budget_matter+=pba->Omega0_dmeff;
+    }
     if(pba->has_idm_dr){
       _class_print_species_("Interacting Dark Matter - DR ",idm_dr);
       budget_matter+=pba->Omega0_idm_dr;

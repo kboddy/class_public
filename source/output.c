@@ -1109,6 +1109,13 @@ int output_thermodynamics(
     fprintf(thermofile,"#       tau_d = baryon drag optical depth \n");
     if (pth->compute_damping_scale == _TRUE_)
       fprintf(thermofile,"#         r_d = approximate comoving value of photon damping scale \n");
+    if(pba->has_dmeff == _TRUE_) {
+      fprintf(thermofile,"#         T_dmeff = temperature of DM interacting with baryons \n");
+      fprintf(thermofile,"#  rate_dmeff_mom = rate coefficient of momentum transfer \n");
+      fprintf(thermofile,"# rate_dmeff_mom' = derivative of this rate \n");
+      fprintf(thermofile,"# rate_dmeff_temp = rate coefficient of heat transfer \n");
+      fprintf(thermofile,"#       c_dmeff^2 = DM sound speed squared \n");
+    }
     if(pba->has_idm_dr == _TRUE_) {
       fprintf(thermofile,"#  dmu_idm_dr = scattering rate of idr with idm_dr (i.e. idr opacity to idm_dr scattering) (units 1/Mpc)\n");
       fprintf(thermofile,"# ddmu_idm_dr = derivative of this rate\n");
