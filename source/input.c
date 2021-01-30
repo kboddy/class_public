@@ -997,6 +997,9 @@ int input_read_parameters(
       else if ((strstr(string1,"helium") != NULL)) {
         pth->dmeff_target = helium;
       }
+      else if ((strstr(string1,"electron") != NULL)) {
+        pth->dmeff_target = electron;
+      }
       else{
         class_stop(errmsg,"incomprehensible input '%s' for the field 'dmeff_target'",string1);
       }
