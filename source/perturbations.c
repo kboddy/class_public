@@ -6723,6 +6723,15 @@ int perturb_total_stress_energy(
       ppw->delta_rho += ppw->pvecback[pba->index_bg_rho_dmeff]*y[ppw->pv->index_pt_delta_dmeff];
       ppw->rho_plus_p_theta += ppw->pvecback[pba->index_bg_rho_dmeff]*y[ppw->pv->index_pt_theta_dmeff];
       ppw->rho_plus_p_tot += ppw->pvecback[pba->index_bg_rho_dmeff];
+
+      if (ppt->has_source_delta_m == _TRUE_) {
+        delta_rho_m += ppw->pvecback[pba->index_bg_rho_dmeff]*y[ppw->pv->index_pt_delta_dmeff]; // contribution to delta rho_matter
+        rho_m += ppw->pvecback[pba->index_bg_rho_dmeff];
+      }
+      if ((ppt->has_source_delta_m == _TRUE_) || (ppt->has_source_theta_m == _TRUE_)) {
+        rho_plus_p_theta_m += ppw->pvecback[pba->index_bg_rho_dmeff]*y[ppw->pv->index_pt_theta_dmeff]; // contribution to [(rho+p)theta]_matter
+        rho_plus_p_m += ppw->pvecback[pba->index_bg_rho_dmeff];
+      }
     }
 
     /* dcdm contribution */
