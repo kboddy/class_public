@@ -1351,6 +1351,9 @@ int thermodynamics_free(
   free(pth->thermodynamics_table);
   free(pth->d2thermodynamics_dz2_table);
 
+  if(pth->dmeff_target!=NULL)
+    free(pth->dmeff_target);
+
   return _SUCCESS_;
 }
 
@@ -4461,8 +4464,9 @@ int thermodynamics_dmeff_rate(struct background *pba,
 
   double z, a, H, rho_baryon, mu, nH;
   double mass_target,rho_target;
-  double Tb, Tdmeff, dTb, dTdmeff;
+  double Tb, Tdmeff, dTb, dTdmeff, ddkappa1, ddkappa2;
   double cn, vth2, Vrel2, rate_mom, rate_heat;
+  int i;
 
   /* Initialize quantities to save in pvecthermo. */
   pvecthermo[pth->index_th_dkappa_dmeff]  = 0.0;
@@ -4470,8 +4474,11 @@ int thermodynamics_dmeff_rate(struct background *pba,
   pvecthermo[pth->index_th_dkappaT_dmeff] = 0.0;
   pvecthermo[pth->index_th_cdmeff2] = 0.0;
 
+  ddkappa1 = 0.0;
+  ddkappa2 = 0.0;
+
   /* Check if there is any interaction at all. */
-  if(pba->sigma_dmeff == 0.0){
+  if(pba->N_dmeff == 0){
     return _SUCCESS_;
   }
 
@@ -4489,39 +4496,46 @@ int thermodynamics_dmeff_rate(struct background *pba,
   Tdmeff = pvecthermo[pth->index_th_Tdmeff];
   Tb     = pvecthermo[pth->index_th_Tb];
 
-  /* set info for target particle that interacts with DM */
-  if (pth->dmeff_target == baryon){ // generic baryon
-    mass_target = mu;
-    rho_target  = rho_baryon;
-  }
-  else if (pth->dmeff_target == hydrogen){ // neutral and ionized hydrogen
-    mass_target = _m_H_;
-    rho_target  = (1.-pth->YHe)*rho_baryon;
-  }
-  else if (pth->dmeff_target == helium){ // neutral and ionized helium
-    mass_target = _m_H_ * _not4_;
-    rho_target  = pth->YHe*rho_baryon;
-  }
-  else if (pth->dmeff_target == electron){ // free electrons
-    mass_target = _m_e_;
-    rho_target  = _m_e_ * nH * pvecthermo[pth->index_th_xe];
-  }
+  /* loop over possible interaction terms */
+  for(i=0; i<pba->N_dmeff; i++){
+    if(pba->sigma_dmeff[i] <= 0.) continue;
 
-  cn = pow(2.,(pba->npow_dmeff + 5.)/2.) * tgamma(3. + pba->npow_dmeff / 2.) / (3.*_SQRT_PI_);
-  Vrel2 = pow(pvecback[pba->index_bg_Vrel_dmeff],2);
-  vth2 = (Tdmeff*_k_B_) / pba->m_dmeff + (Tb*_k_B_) / mass_target + Vrel2/3.;
+    /* set info for target particle that interacts with DM */
+    if (pth->dmeff_target[i] == baryon){ // generic baryon
+      mass_target = mu;
+      rho_target  = rho_baryon;
+    }
+    else if (pth->dmeff_target[i] == hydrogen){ // neutral and ionized hydrogen
+      mass_target = _m_H_;
+      rho_target  = (1.-pth->YHe)*rho_baryon;
+    }
+    else if (pth->dmeff_target[i] == helium){ // neutral and ionized helium
+      mass_target = _m_H_ * _not4_;
+      rho_target  = pth->YHe*rho_baryon;
+    }
+    else if (pth->dmeff_target[i] == electron){ // free electrons
+      mass_target = _m_e_;
+      rho_target  = _m_e_ * nH * pvecthermo[pth->index_th_xe];
+    }
 
-  rate_mom  = a * rho_target * cn * pba->sigma_dmeff/(pba->m_dmeff + mass_target) * pow(vth2/(_c_*_c_), (pba->npow_dmeff + 1.)/2.);
-  rate_heat = rate_mom * pba->m_dmeff / (pba->m_dmeff + mass_target);
+    cn = pow(2.,(pba->npow_dmeff[i] + 5.)/2.) * tgamma(3. + pba->npow_dmeff[i] / 2.) / (3.*_SQRT_PI_);
+    Vrel2 = pow(pvecback[pba->index_bg_Vrel_dmeff],2);
+    vth2 = (Tdmeff*_k_B_) / pba->m_dmeff + (Tb*_k_B_) / mass_target + Vrel2/3.;
 
-  pvecthermo[pth->index_th_dkappa_dmeff]  += rate_mom;
-  pvecthermo[pth->index_th_dkappaT_dmeff] += rate_heat;
+    rate_mom  = a * rho_target * cn * pba->sigma_dmeff[i]/(pba->m_dmeff + mass_target) * pow(vth2/(_c_*_c_), (pba->npow_dmeff[i] + 1.)/2.);
+    rate_heat = rate_mom * pba->m_dmeff / (pba->m_dmeff + mass_target);
+
+    pvecthermo[pth->index_th_dkappa_dmeff]  += rate_mom;
+    pvecthermo[pth->index_th_dkappaT_dmeff] += rate_heat;
+
+    ddkappa1 += rate_mom * (pba->npow_dmeff[i]+1.)/2. * (_k_B_)/(pba->m_dmeff)/ vth2; // multiplied by dTdemff/dtau below
+    ddkappa2 += rate_mom * (pba->npow_dmeff[i]+1.)/2. * (_k_B_)/(mass_target) / vth2; // multiplied by dTb/dtau below
+  }
 
   /* derivatives */
   dTdmeff = -2.*a*H*Tdmeff + 2.*pvecthermo[pth->index_th_dkappaT_dmeff] * (Tb - Tdmeff); // dTdmeff/dtau
   dTb = pvecthermo[pth->index_th_dTb]; // dTb/dtau
-  pvecthermo[pth->index_th_ddkappa_dmeff] = -2.*a*H + (pba->npow_dmeff + 1.)/2. * _k_B_ * (dTdmeff/pba->m_dmeff + dTb/mass_target) / vth2;
-  pvecthermo[pth->index_th_ddkappa_dmeff] *= rate_mom;
+  pvecthermo[pth->index_th_ddkappa_dmeff] = -2.*a*H*pvecthermo[pth->index_th_dkappa_dmeff] + ddkappa1*dTdmeff + ddkappa2*dTb;
 
   /* Also fill in c^2 for dmeff. */
   pvecthermo[pth->index_th_cdmeff2] = _k_B_/(pba->m_dmeff*_c_*_c_) * (Tdmeff - dTdmeff/(3.*a*H));
