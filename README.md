@@ -1,3 +1,7 @@
+
+This modification of CLASS code implements DM-baryon elastic scattering, parameterized as a powerlaw of relative particle velocity. If you use this code, please cite the following publications for which the modified code was developed, in addition to the original CLASS papers: https://arxiv.org/abs/2107.12380, https://arxiv.org/abs/1712.07133, and https://arxiv.org/abs/1801.08609. 
+
+
 CLASS: Cosmic Linear Anisotropy Solving System  {#mainpage}
 ==============================================
 
