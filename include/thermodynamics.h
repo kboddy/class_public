@@ -82,7 +82,7 @@ struct thermo
 
   enum reionization_z_or_tau reio_z_or_tau; /**< is the input parameter the reionization redshift or optical depth? */
 
-  enum select_dmeff_target dmeff_target; /**< define the particle with which dmeff interacts */
+  enum select_dmeff_target * dmeff_target; /**< define the particle with which dmeff interacts */
 
   double tau_reio; /**< if above set to tau, input value of reionization optical depth */
 

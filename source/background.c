@@ -871,6 +871,14 @@ int background_free_input(
     if (pba->scf_parameters != NULL)
       free(pba->scf_parameters);
   }
+
+  if(pba->has_dmeff){
+    if(pba->sigma_dmeff!=NULL)
+      free(pba->sigma_dmeff);
+    if(pba->npow_dmeff!=NULL)
+      free(pba->npow_dmeff);
+  }
+
   return _SUCCESS_;
 }
 

@@ -631,10 +631,11 @@ int input_read_parameters(
   int flag1,flag2,flag3;
   double param1,param2,param3;
   int N_ncdm=0,n,entries_read;
-  int int1,fileentries;
+  int N_dmeff=0;
+  int int1,int2,fileentries;
   double scf_lambda;
   double fnu_factor;
-  double * pointer1;
+  double * pointer1, * pointer2;
   char string1[_ARGUMENT_LENGTH_MAX_];
   char string2[_ARGUMENT_LENGTH_MAX_];
   double k1=0.;
@@ -653,6 +654,7 @@ int input_read_parameters(
 
   double Omega_tot;
   double Omega0_cdm_orig;
+  char * dmeff_target;
 
   int i;
 
@@ -962,47 +964,104 @@ int input_read_parameters(
     if (flag1 == _TRUE_)
       pba->m_dmeff = param1 * 1.0e9 * _eV_ / (_c_ * _c_); // convert GeV to kg
 
-    /* npow_dmeff (dmeff) */
-    class_read_double("npow_dmeff",pba->npow_dmeff);
-    class_test(pba->npow_dmeff < -4,errmsg,"In input file, must set npow_dmeff >= -4");
+    /* N_dmeff */
+    class_read_int("N_dmeff",N_dmeff);
 
-    /* sigma_dmeff (dmeff) in cm^2 */
-    class_call(parser_read_double(pfc,"sigma_dmeff",&param1,&flag1,errmsg),
-               errmsg,
-               errmsg);
-    class_call(parser_read_double(pfc,"log10sigma_dmeff",&param2,&flag2,errmsg),
-               errmsg,
-               errmsg);
-    class_test(((flag1 == _TRUE_) && (flag2 == _TRUE_)),
-               errmsg,
-               "In input file, you can only enter one of sigma_dmeff or log10sigma_dmeff, choose one");
-    if (flag1 == _TRUE_)
-      pba->sigma_dmeff = param1 / 10000.; // convert to m^2
-    if (flag2 == _TRUE_)
-      pba->sigma_dmeff = pow(10,param2) / 10000.; // convert to m^2
+    if (N_dmeff > 0){
+      pba->N_dmeff = N_dmeff;
 
-    /** - target particle for dmeff interactions */
-    class_call(parser_read_string(pfc,"dmeff_target",&string1,&flag1,errmsg),
-               errmsg,
-               errmsg);
+      /* npow_dmeff (dmeff) */
+      class_call(parser_read_list_of_doubles(pfc,"npow_dmeff",&(int1),&(pba->npow_dmeff),&flag1,errmsg),
+                 errmsg,
+                 errmsg);
+      class_test(flag1 == _FALSE_,errmsg,
+                 "Input npow_dmeff is found, but no values found!");
+      class_test(int1 != N_dmeff,errmsg,
+                 "Number of dmeff targets found, %d, does not match number of _TRUE_ values of N_dmeff, %d",
+                 int1,N_dmeff);
 
-    if (flag1 == _TRUE_) {
-
-      if ((strstr(string1,"baryon") != NULL)) {
-        pth->dmeff_target = baryon;
+      for(i=0; i<N_dmeff; i++){
+        class_test(pba->npow_dmeff[i] < -4,errmsg,"In input file, must set npow_dmeff entries >= -4");
       }
-      else if ((strstr(string1,"hydrogen") != NULL)) {
-        pth->dmeff_target = hydrogen;
+
+      /* sigma_dmeff (dmeff) in cm^2 */
+      class_call(parser_read_list_of_doubles(pfc,
+                                             "sigma_dmeff",
+                                             &(int1),
+                                             &(pointer1),
+                                             &flag1,
+                                             errmsg),
+                 errmsg,
+                 errmsg);
+
+      class_call(parser_read_list_of_doubles(pfc,
+                                             "log10sigma_dmeff",
+                                             &(int2),
+                                             &(pointer2),
+                                             &flag2,
+                                             errmsg),
+                 errmsg,
+                 errmsg);
+
+      class_test(((flag1 == _TRUE_) && (flag2 == _TRUE_)),
+                 errmsg,
+                 "In input file, you can only enter one of sigma_dmeff or log10sigma_dmeff, choose one");
+
+      class_alloc(pba->sigma_dmeff, sizeof(double*)*N_dmeff,pba->error_message);
+
+      if (flag1 == _TRUE_){
+        class_test(int1 != N_dmeff,errmsg,
+                   "Number of dmeff sigma entries found, %d, does not match number of _TRUE_ values of N_dmeff, %d",
+                   int1,N_dmeff);
+        for (i=0; i<N_dmeff; i++){
+          pba->sigma_dmeff[i] = pointer1[i]/10000.; // convert to m^2
+        }
+        free(pointer1);
       }
-      else if ((strstr(string1,"helium") != NULL)) {
-        pth->dmeff_target = helium;
-      }
-      else if ((strstr(string1,"electron") != NULL)) {
-        pth->dmeff_target = electron;
+      else if (flag2 == _TRUE_){
+        class_test(int2 != N_dmeff,errmsg,
+                   "Number of dmeff log(sigma) entries found, %d, does not match number of _TRUE_ values of N_dmeff, %d",
+                   int2,N_dmeff);
+        for (i=0; i<N_dmeff; i++){
+          pba->sigma_dmeff[i] = pow(10,pointer2[i]) / 10000.; // convert to m^2
+        }
+        free(pointer2);
       }
       else{
-        class_stop(errmsg,"incomprehensible input '%s' for the field 'dmeff_target'",string1);
+        for (i=0; i<N_dmeff; i++){
+          pba->sigma_dmeff[i] = 0.;
+        }
       }
+
+      /* target particle for dmeff interactions */
+      class_call(parser_read_list_of_strings(pfc,"dmeff_target",&entries_read,&(dmeff_target),&flag1,errmsg),
+                 errmsg,
+                 errmsg);
+      class_test(flag1 == _FALSE_,errmsg,
+                 "Input dmeff_target is found, but no target names found!");
+      class_test(entries_read != N_dmeff,errmsg,
+                 "Number of dmeff targets found, %d, does not match number of _TRUE_ values of N_dmeff, %d",
+                 entries_read,N_dmeff);
+
+      class_alloc(pth->dmeff_target, sizeof(enum select_dmeff_target*)*N_dmeff,pth->error_message);
+      for(i=0; i<N_dmeff; i++){
+        if ((strstr(dmeff_target+i*_ARGUMENT_LENGTH_MAX_,"baryon") != NULL)) {
+          pth->dmeff_target[i] = baryon;
+        }
+        else if ((strstr(dmeff_target+i*_ARGUMENT_LENGTH_MAX_,"hydrogen") != NULL)) {
+          pth->dmeff_target[i] = hydrogen;
+        }
+        else if ((strstr(dmeff_target+i*_ARGUMENT_LENGTH_MAX_,"helium") != NULL)) {
+          pth->dmeff_target[i] = helium;
+        }
+        else if ((strstr(dmeff_target+i*_ARGUMENT_LENGTH_MAX_,"electron") != NULL)) {
+          pth->dmeff_target[i] = electron;
+        }
+        else{
+          class_stop(errmsg,"incomprehensible input '%s' for the field 'dmeff_target'",dmeff_target+i*_ARGUMENT_LENGTH_MAX_);
+        }
+      }
+      free(dmeff_target);
 
     }
 
@@ -3298,9 +3357,10 @@ int input_default_params(
   pba->Omega0_cdm = 0.12038/pow(pba->h,2);
   pba->Omega0_dmeff = 0.0;
   pba->m_dmeff = 1.0 * 1.0e9 * _eV_ / (_c_ * _c_);
-  pba->npow_dmeff = 0.0;
-  pba->sigma_dmeff = 0.0;
-  pth->dmeff_target = hydrogen;
+  pba->N_dmeff = 0;
+  pba->npow_dmeff = NULL;
+  pba->sigma_dmeff = NULL;
+  pth->dmeff_target = NULL;
   pba->Vrel_dmeff = 0.0;
   pba->Omega0_dcdmdr = 0.0;
   pba->Omega0_dcdm = 0.0;

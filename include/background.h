@@ -61,9 +61,11 @@ struct background
 
   double m_dmeff; /**< \f$ m_{dmeff} \f$ : mass of dark matter with effective interactions */
 
-  double sigma_dmeff; /**< \f$ \simga_{dmeff} \f$ : momentum-transfer cross section of dark matter with effective interactions, in units of cm^2 */
+  int N_dmeff;  /**< \f$ N_{dmeff} \f$ : number of dark matter effective interaction terms */
 
-  double npow_dmeff; /**< \f$ n_{dmeff} \f$ : power of relative velocity of momentum-transfer cross section for dark matter with effective interactions */
+  double * sigma_dmeff; /**< \f$ \simga_{dmeff} \f$ : momentum-transfer cross section of dark matter with effective interactions, in units of cm^2 */
+
+  double * npow_dmeff; /**< \f$ n_{dmeff} \f$ : power of relative velocity of momentum-transfer cross section for dark matter with effective interactions */
 
   double Vrel_dmeff; /**< \f$ Vrel_{dmeff} \f$ : initial RMS relative bulk velocity between DM and baryons (at z >> z_rec) */
 
